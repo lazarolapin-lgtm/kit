@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResidênciaViva — Gestão de Quartos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --accent: #e8a838;
+    --accent2: #f0c060;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+    --danger: #f85149;
+    --success: #3fb950;
+    --info: #58a6ff;
+    --sidebar-w: 260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .logo-wrap {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-wrap img {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    border-radius: 16px;
+    filter: drop-shadow(0 0 18px rgba(232,168,56,0.4));
+  }
+
+  .sidebar-section {
+    padding: 10px 12px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 12px 6px;
+    font-weight: 600;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    text-decoration: none;
+    margin-bottom: 2px;
+    position: relative;
+  }
+
+  .nav-item:hover, .nav-item.active {
+    background: rgba(232,168,56,0.12);
+    color: var(--accent);
+  }
+
+  .nav-item .icon {
+    font-size: 16px;
+    width: 22px;
+    text-align: center;
+  }
+
+  .badge {
+    margin-left: auto;
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOP HEADER ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+  }
+
+  .topbar h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--bg);
+    cursor: pointer;
+  }
+
+  /* ── HERO CAROUSEL ── */
+  .hero-carousel {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-track {
+    display: flex;
+    animation: heroScroll 40s linear infinite;
+    height: 100%;
+  }
+
+  .hero-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-slide:nth-child(1) { background: linear-gradient(135deg, #1a1000 0%, #3d2800 50%, #1a1000 100%); }
+  .hero-slide:nth-child(2) { background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 50%, #0a1628 100%); }
+  .hero-slide:nth-child(3) { background: linear-gradient(135deg, #0f1f0f 0%, #1e3d1e 50%, #0f1f0f 100%); }
+
+  .hero-slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.03) 0%, transparent 70%);
+  }
+
+  .hero-text {
+    text-align: center;
+    z-index: 2;
+    padding: 20px;
+  }
+
+  .hero-text h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(232,168,56,0.5);
+  }
+
+  .hero-text p {
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 500px;
+  }
+
+  @keyframes heroScroll {
+    0%   { transform: translateX(0); }
+    30%  { transform: translateX(0); }
+    33%  { transform: translateX(-100%); }
+    63%  { transform: translateX(-100%); }
+    66%  { transform: translateX(-200%); }
+    96%  { transform: translateX(-200%); }
+    100% { transform: translateX(0); }
+  }
+
+  /* ── FLOATING DOTS ANIMATION ── */
+  .dots-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .dot {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.08;
+    animation: floatDot linear infinite;
+  }
+
+  @keyframes floatDot {
+    0%   { transform: translateY(100%) scale(0.5); opacity: 0; }
+    10%  { opacity: 0.1; }
+    90%  { opacity: 0.05; }
+    100% { transform: translateY(-100%) scale(1.2); opacity: 0; }
+  }
+
+  /* ── CONTENT AREA ── */
+  .content {
+    padding: 28px;
+    flex: 1;
+  }
+
+  /* ── CARDS GRID ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(232,168,56,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(232,168,56,0.15);
+  }
+
+  .card:hover::after { opacity: 1; }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .card-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 6px;
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    margin-top: 10px;
+  }
+
+  .section-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--text);
+  }
+
+  .section-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── MORADORES CAROUSEL ── */
+  .moradores-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 0;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+
+  .moradores-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 20px 12px;
+    font-weight: 600;
+  }
+
+  .moradores-track-wrap {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .moradores-track-wrap::before,
+  .moradores-track-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 60px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .moradores-track-wrap::before {
+    left: 0;
+    background: linear-gradient(to right, var(--surface), transparent);
+  }
+
+  .moradores-track-wrap::after {
+    right: 0;
+    background: linear-gradient(to left, var(--surface), transparent);
+  }
+
+  .moradores-track {
+    display: flex;
+    gap: 12px;
+    padding: 4px 20px;
+    animation: scrollMoradores 120s linear infinite;
+    width: max-content;
+  }
+
+  .morador-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 6px 14px;
+    white-space: nowrap;
+    transition: border-color 0.2s;
+  }
+
+  .morador-chip:hover { border-color: var(--accent); }
+
+  .morador-num {
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 10px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .morador-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  @keyframes scrollMoradores {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ── UPLOAD SECTION ── */
+  .upload-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 28px;
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 36px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-bottom: 16px;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(232,168,56,0.05);
+  }
+
+  .drop-zone .upload-icon { font-size: 36px; margin-bottom: 10px; display: block; }
+  .drop-zone p { color: var(--muted); font-size: 14px; }
+  .drop-zone span { color: var(--accent); font-weight: 600; cursor: pointer; }
+
+  #fileInput { display: none; }
+
+  .files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .file-icon { font-size: 20px; }
+
+  .file-info { flex: 1; }
+  .file-info .fname { font-size: 14px; font-weight: 500; }
+  .file-info .fsize { font-size: 11px; color: var(--muted); }
+
+  .btn-download {
+    background: rgba(232,168,56,0.15);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-download:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent2);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(232,168,56,0.3);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── INFO SECTIONS ── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .info-card h4 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+
+  .info-row .label {
+    color: var(--muted);
+    min-width: 100px;
+    font-size: 12px;
+  }
+
+  .info-row .val { color: var(--text); font-weight: 500; }
+
+  /* ── NOTIFICAÇÕES BANNER ── */
+  .notif-bar {
+    background: linear-gradient(90deg, rgba(88,166,255,0.1), rgba(88,166,255,0.05));
+    border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 12px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(88,166,255,0.1); }
+    50% { box-shadow: 0 0 20px 4px rgba(88,166,255,0.08); }
+  }
+
+  .notif-icon { font-size: 22px; }
+  .notif-text { flex: 1; font-size: 13px; color: var(--info); }
+  .notif-time { font-size: 11px; color: var(--muted); }
+
+  /* ── LIXO / CORREIOS ── */
+  .schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .day-chip {
+    padding: 8px 4px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .day-chip.active {
+    background: rgba(232,168,56,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .day-chip .day-name { color: var(--muted); font-size: 10px; }
+  .day-chip .day-icon { font-size: 16px; margin-bottom: 4px; }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 32px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 28px;
+    margin-left: var(--sidebar-w);
+  }
+
+  .footer-col h5 {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .footer-col p, .footer-col a {
+    font-size: 13px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-col a:hover { color: var(--accent); }
+
+  .footer-bottom {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: var(--sidebar-w);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* ── ANIMATED SEPARATOR ── */
+  .animated-sep {
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), var(--accent), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+    border-radius: 2px;
+    margin: 24px 0;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: min(500px, 90vw);
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes modalIn {
+    from { transform: scale(0.85) translateY(20px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .modal-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--accent);
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 22px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover { color: var(--danger); }
+
+  /* ── FORM FIELDS ── */
+  .form-group { margin-bottom: 16px; }
+
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(232,168,56,0.1);
+  }
+
+  .form-group textarea { resize: vertical; min-height: 90px; }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 28px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead { background: var(--surface2); }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(232,168,56,0.03); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .status-pago    { background: rgba(63,185,80,0.15);  color: var(--success); }
+  .status-atraso  { background: rgba(248,81,73,0.15);  color: var(--danger);  }
+  .status-pendente{ background: rgba(232,168,56,0.15); color: var(--accent);  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <img src="https://i.postimg.cc/4dfqbd20/Agrupar.gif" alt="Logo ResidênciaViva">
+  </div>
+
+  <div class="sidebar-label">Principal</div>
+  <div class="sidebar-section">
+    <a class="nav-item active" onclick="showSection('dashboard')">
+      <span class="icon">🏠</span> Dashboard
+    </a>
+    <a class="nav-item" onclick="showSection('agendamento')">
+      <span class="icon">📅</span> Agendamento
+    </a>
+    <a class="nav-item" onclick="showSection('valores')">
+      <span class="icon">💰</span> Valor do Aluguel
+    </a>
+    <a class="nav-item" onclick="showSection('mudancas')">
+      <span class="icon">📦</span> Mudanças
+    </a>
+    <a class="nav-item" onclick="showSection('declaracao')">
+      <span class="icon">📄</span> Declaração
+    </a>
+    <a class="nav-item" onclick="showSection('pagamentos')">
+      <span class="icon">💳</span> Pagamentos
+    </a>
+    <a class="nav-item" onclick="showSection('recibos')">
+      <span class="icon">🧾</span> Recibos
+    </a>
+    <a class="nav-item" onclick="showSection('multas')">
+      <span class="icon">⚠️</span> Multas <span class="badge">2</span>
+    </a>
+  </div>
+
+  <div class="sidebar-label">Morador</div>
+  <div class="sidebar-section">
+    <a class="nav-item" onclick="showSection('notificacoes')">
+      <span class="icon">🔔</span> Notificações <span class="badge">5</span>
+    </a>
+    <a class="nav-item" onclick="showSection('manutencao')">
+      <span class="icon">🔧</span> Manutenção
+    </a>
+    <a class="nav-item" onclick="showSection('reclamacao')">
+      <span class="icon">📢</span> Reclamação
+    </a>
+    <a class="nav-item" onclick="showSection('importantes')">
+      <span class="icon">📌</span> Importantes
+    </a>
+  </div>
+
+  <div class="sidebar-label">Serviços</div>
+  <div class="sidebar-section">
+    <a class="nav-item" onclick="showSection('correios')">
+      <span class="icon">📮</span> Correios
+    </a>
+    <a class="nav-item" onclick="showSection('lixo')">
+      <span class="icon">🗑️</span> Lixo – Horário
+    </a>
+    <a class="nav-item" onclick="showSection('documentos')">
+      <span class="icon">📁</span> Documentos
+    </a>
+  </div>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <h1>ResidênciaViva</h1>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="openModal('agendamentoModal')">
+        ➕ Novo Agendamento
+      </button>
+      <div class="avatar">A</div>
+    </div>
+  </header>
+
+  <!-- HERO CAROUSEL -->
+  <div class="hero-carousel">
+    <div class="dots-bg" id="dotsBg"></div>
+    <div class="hero-track">
+      <div class="hero-slide">
+        <div class="hero-text">
+          <h2>Bem-vindo à ResidênciaViva</h2>
+          <p>Gestão completa de quartos para você e seus moradores com praticidade e transparência.</p>
+        </div>
+      </div>
+      <div class="hero-slide">
+        <div class="hero-text">
+          <h2>Pagamentos em Dia</h2>
+          <p>Acompanhe aluguéis, gere recibos e gerencie multas tudo em um só lugar.</p>
+        </div>
+      </div>
+      <div class="hero-slide">
+        <div class="hero-text">
+          <h2>Comunicação Fácil</h2>
+          <p>Envie notificações, registre manutenções e resolva reclamações com agilidade.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="section-dashboard">
+
+      <!-- NOTIF BAR -->
+      <div class="notif-bar">
+        <span class="notif-icon">🔔</span>
+        <div class="notif-text">
+          <strong>Atenção:</strong> Coleta de lixo amanhã às 07h. Colocar os sacos até as 06h30.
+        </div>
+        <span class="notif-time">Hoje, 14:32</span>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="section-header"><h3>Resumo Geral</h3></div>
+      <div class="cards-grid">
+        <div class="card" onclick="showSection('valores')">
+          <span class="card-icon">🏠</span>
+          <div class="card-title">Quartos Ocupados</div>
+          <div class="card-value">38/50</div>
+          <div class="card-sub">76% de ocupação</div>
+        </div>
+        <div class="card" onclick="showSection('pagamentos')">
+          <span class="card-icon">💰</span>
+          <div class="card-title">Receita do Mês</div>
+          <div class="card-value">R$ 34.200</div>
+          <div class="card-sub">+8% vs mês anterior</div>
+        </div>
+        <div class="card" onclick="showSection('multas')">
+          <span class="card-icon">⚠️</span>
+          <div class="card-title">Em Atraso</div>
+          <div class="card-value">2</div>
+          <div class="card-sub">moradores</div>
+        </div>
+        <div class="card" onclick="showSection('manutencao')">
+          <span class="card-icon">🔧</span>
+          <div class="card-title">Manutenções</div>
+          <div class="card-value">5</div>
+          <div class="card-sub">abertas esta semana</div>
+        </div>
+        <div class="card" onclick="showSection('agendamento')">
+          <span class="card-icon">📅</span>
+          <div class="card-title">Agendamentos</div>
+          <div class="card-value">3</div>
+          <div class="card-sub">visitas esta semana</div>
+        </div>
+        <div class="card" onclick="showSection('documentos')">
+          <span class="card-icon">📁</span>
+          <div class="card-title">Documentos</div>
+          <div class="card-value">12</div>
+          <div class="card-sub">arquivos salvos</div>
+        </div>
+      </div>
+
+      <!-- MORADORES CAROUSEL -->
+      <div class="section-header"><h3>Lista de Moradores</h3></div>
+      <div class="moradores-wrap">
+        <div class="moradores-label">🏘️ Moradores Cadastrados — Nº 1 ao 50</div>
+        <div class="moradores-track-wrap">
+          <div class="moradores-track" id="moradoresTrack"></div>
+        </div>
+      </div>
+
+      <div class="animated-sep"></div>
+
+      <!-- PAGAMENTOS TABLE -->
+      <div class="section-header"><h3>Pagamentos Recentes</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Morador</th><th>Quarto</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>001</td><td>Ana Silva</td><td>101</td><td>10/03/2026</td><td>R$ 850</td>
+              <td><span class="status-badge status-pago">✅ Pago</span></td>
+              <td><button class="btn-download" onclick="alert('Recibo gerado!')">🧾 Recibo</button></td>
+            </tr>
+            <tr>
+              <td>002</td><td>Carlos Mendes</td><td>102</td><td>10/03/2026</td><td>R$ 900</td>
+              <td><span class="status-badge status-atraso">❌ Atraso</span></td>
+              <td><button class="btn-download" onclick="openModal('multaModal')">⚠️ Multa</button></td>
+            </tr>
+            <tr>
+              <td>003</td><td>Fernanda Costa</td><td>103</td><td>15/03/2026</td><td>R$ 780</td>
+              <td><span class="status-badge status-pendente">⏳ Pendente</span></td>
+              <td><button class="btn-download">💳 Cobrar</button></td>
+            </tr>
+            <tr>
+              <td>004</td><td>José Oliveira</td><td>104</td><td>10/03/2026</td><td>R$ 850</td>
+              <td><span class="status-badge status-pago">✅ Pago</span></td>
+              <td><button class="btn-download" onclick="alert('Recibo gerado!')">🧾 Recibo</button></td>
+            </tr>
+            <tr>
+              <td>005</td><td>Mariana Souza</td><td>105</td><td>10/03/2026</td><td>R$ 950</td>
+              <td><span class="status-badge status-atraso">❌ Atraso</span></td>
+              <td><button class="btn-download" onclick="openModal('multaModal')">⚠️ Multa</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- INFO GRID -->
+      <div class="info-grid">
+        <!-- LIXO -->
+        <div class="info-card" id="section-lixo-embed">
+          <h4>🗑️ Horário do Lixo</h4>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Coloque os sacos até 30 min antes do horário indicado.</p>
+          <div class="schedule-grid">
+            <div class="day-chip"><div class="day-icon">🗑️</div><div class="day-name">Seg</div>07h</div>
+            <div class="day-chip active"><div class="day-icon">🗑️</div><div class="day-name">Ter</div>07h</div>
+            <div class="day-chip"><div class="day-icon">🗑️</div><div class="day-name">Qua</div>07h</div>
+            <div class="day-chip active"><div class="day-icon">♻️</div><div class="day-name">Qui</div>07h</div>
+            <div class="day-chip"><div class="day-icon">🗑️</div><div class="day-name">Sex</div>07h</div>
+            <div class="day-chip active"><div class="day-icon">🗑️</div><div class="day-name">Sáb</div>08h</div>
+            <div class="day-chip"><div class="day-icon">—</div><div class="day-name">Dom</div>—</div>
+          </div>
+        </div>
+        <!-- CORREIOS -->
+        <div class="info-card">
+          <h4>📮 Correios</h4>
+          <div class="info-row">
+            <span class="label">Horário</span>
+            <span class="val">Seg–Sex, 08h–18h</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Local entrega</span>
+            <span class="val">Portaria – Caixa A</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Encomendas</span>
+            <span class="val">Retirar em até 5 dias úteis</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Agência</span>
+            <span class="val">Rua das Flores, 230</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Rastrear</span>
+            <span class="val"><a href="https://rastreamento.correios.com.br" target="_blank" style="color:var(--info)">correios.com.br</a></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPLOAD SECTION -->
+      <div class="section-header"><h3>📁 Documentos</h3></div>
+      <div class="upload-section">
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <span class="upload-icon">📎</span>
+          <p>Arraste arquivos aqui ou <span>clique para selecionar</span></p>
+          <p style="margin-top:6px;font-size:12px;">Aceita: .docx, .pdf — máx 20 MB</p>
+        </div>
+        <input type="file" id="fileInput" multiple accept=".pdf,.docx,.doc" onchange="handleFiles(this.files)">
+        <div class="files-list" id="filesList"></div>
+      </div>
+
+    </div>
+
+    <!-- ── SECTIONS dinâmicas ── -->
+    <div id="section-agendamento" style="display:none">
+      <div class="section-header"><h3>📅 Agendamento de Visitas</h3></div>
+      <div class="notif-bar" style="background:rgba(232,168,56,0.08);border-color:rgba(232,168,56,0.2)">
+        <span class="notif-icon">📅</span>
+        <div class="notif-text" style="color:var(--accent)">3 visitas agendadas esta semana</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="openModal('agendamentoModal')">➕ Novo Agendamento</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Interessado</th><th>Data</th><th>Hora</th><th>Quarto</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Ricardo Nunes</td><td>23/03/2026</td><td>10:00</td><td>201</td><td><span class="status-badge status-pendente">⏳ Pendente</span></td></tr>
+            <tr><td>2</td><td>Patrícia Lima</td><td>24/03/2026</td><td>14:30</td><td>302</td><td><span class="status-badge status-pago">✅ Confirmado</span></td></tr>
+            <tr><td>3</td><td>Bruno Santos</td><td>25/03/2026</td><td>09:00</td><td>105</td><td><span class="status-badge status-pendente">⏳ Pendente</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="section-valores" style="display:none">
+      <div class="section-header"><h3>💰 Valores de Aluguel</h3></div>
+      <div class="cards-grid">
+        <div class="card"><span class="card-icon">🛏️</span><div class="card-title">Quarto Simples</div><div class="card-value">R$ 750</div><div class="card-sub">por mês</div></div>
+        <div class="card"><span class="card-icon">🛏️</span><div class="card-title">Quarto Duplo</div><div class="card-value">R$ 950</div><div class="card-sub">por mês</div></div>
+        <div class="card"><span class="card-icon">🛋️</span><div class="card-title">Suíte</div><div class="card-value">R$ 1.200</div><div class="card-sub">por mês</div></div>
+        <div class="card"><span class="card-icon">🌟</span><div class="card-title">Premium</div><div class="card-value">R$ 1.500</div><div class="card-sub">por mês</div></div>
+      </div>
+      <div class="info-card" style="margin-top:16px">
+        <h4>📋 Incluso no Aluguel</h4>
+        <div class="info-row"><span class="label">Água</span><span class="val">✅ Incluso</span></div>
+        <div class="info-row"><span class="label">Internet</span><span class="val">✅ Incluso (300 Mbps)</span></div>
+        <div class="info-row"><span class="label">Limpeza</span><span class="val">✅ Áreas comuns diariamente</span></div>
+        <div class="info-row"><span class="label">Energia</span><span class="val">⚡ Rateio mensal</span></div>
+        <div class="info-row"><span class="label">Garagem</span><span class="val">R$ 150/mês (opcional)</span></div>
+      </div>
+    </div>
+
+    <div id="section-notificacoes" style="display:none">
+      <div class="section-header"><h3>🔔 Notificações</h3></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="notif-bar"><span class="notif-icon">🗑️</span><div class="notif-text">Coleta de lixo amanhã às 07h00.</div><span class="notif-time">Hoje 14:32</span></div>
+        <div class="notif-bar"><span class="notif-icon">💧</span><div class="notif-text">Manutenção da caixa d'água na sexta-feira (08h–10h). Haverá interrupção.</div><span class="notif-time">Hoje 10:00</span></div>
+        <div class="notif-bar"><span class="notif-icon">💳</span><div class="notif-text">Vencimento do aluguel em 3 dias. Realize o pagamento para evitar multa.</div><span class="notif-time">Ontem 09:00</span></div>
+        <div class="notif-bar"><span class="notif-icon">🔧</span><div class="notif-text">Técnico virá verificar o chuveiro do quarto 203. Agende disponibilidade.</div><span class="notif-time">20/03 15:20</span></div>
+        <div class="notif-bar"><span class="notif-icon">🎉</span><div class="notif-text">Bem-vindo ao ResidênciaViva! Dúvidas? Fale com a administração.</div><span class="notif-time">15/03 08:00</span></div>
+      </div>
+    </div>
+
+    <div id="section-manutencao" style="display:none">
+      <div class="section-header"><h3>🔧 Manutenção</h3></div>
+      <button class="btn btn-primary" style="margin-bottom:20px" onclick="openModal('manutencaoModal')">➕ Abrir Chamado</button>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Quarto</th><th>Problema</th><th>Data</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>203</td><td>Chuveiro com vazamento</td><td>20/03</td><td><span class="status-badge status-pendente">Em andamento</span></td></tr>
+            <tr><td>2</td><td>115</td><td>Ar-condicionado não liga</td><td>18/03</td><td><span class="status-badge status-pago">Resolvido</span></td></tr>
+            <tr><td>3</td><td>301</td><td>Tomada com faísca</td><td>22/03</td><td><span class="status-badge status-atraso">Urgente</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="section-reclamacao" style="display:none">
+      <div class="section-header"><h3>📢 Reclamações</h3></div>
+      <button class="btn btn-primary" style="margin-bottom:20px" onclick="openModal('reclamacaoModal')">➕ Nova Reclamação</button>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Morador</th><th>Assunto</th><th>Data</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Ana Silva</td><td>Barulho no corredor após 22h</td><td>21/03</td><td><span class="status-badge status-pendente">Em análise</span></td></tr>
+            <tr><td>2</td><td>José Oliveira</td><td>Limpeza inadequada no banheiro coletivo</td><td>19/03</td><td><span class="status-badge status-pago">Resolvido</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="section-multas" style="display:none">
+      <div class="section-header"><h3>⚠️ Multas</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Morador</th><th>Quarto</th><th>Motivo</th><th>Valor</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Carlos Mendes</td><td>102</td><td>Atraso no pagamento (15 dias)</td><td>R$ 135</td><td><span class="status-badge status-atraso">Não pago</span></td></tr>
+            <tr><td>2</td><td>Mariana Souza</td><td>105</td><td>Atraso no pagamento (8 dias)</td><td>R$ 72</td><td><span class="status-badge status-atraso">Não pago</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="section-documentos" style="display:none">
+      <div class="section-header"><h3>📁 Documentos</h3></div>
+      <div class="upload-section">
+        <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+          <span class="upload-icon">📎</span>
+          <p>Arraste arquivos aqui ou <span>clique para selecionar</span></p>
+          <p style="margin-top:6px;font-size:12px;">Aceita: .docx, .pdf — máx 20 MB</p>
+        </div>
+        <div class="files-list" id="filesList2"></div>
+      </div>
+    </div>
+
+    <!-- Generic placeholders -->
+    <div id="section-mudancas"    style="display:none"><div class="section-header"><h3>📦 Mudanças</h3></div><div class="notif-bar"><span class="notif-icon">📦</span><div class="notif-text">Para agendar uma mudança, entre em contato com a administração com 48h de antecedência. Mudanças permitidas apenas de Segunda a Sábado, das 08h às 17h.</div></div></div>
+    <div id="section-declaracao"  style="display:none"><div class="section-header"><h3>📄 Declaração de Residência</h3></div><div class="notif-bar"><span class="notif-icon">📄</span><div class="notif-text">Solicite sua declaração de residência na administração. Prazo de emissão: 2 dias úteis. Traga RG e contrato assinado.</div></div><button class="btn btn-primary" style="margin-top:16px" onclick="alert('Solicitação enviada!')">📨 Solicitar Declaração</button></div>
+    <div id="section-pagamentos"  style="display:none"><div class="section-header"><h3>💳 Pagamentos</h3></div><div class="table-wrap"><table><thead><tr><th>Mês</th><th>Vencimento</th><th>Valor</th><th>Status</th></tr></thead><tbody><tr><td>Mar/26</td><td>10/03</td><td>R$ 850</td><td><span class="status-badge status-pago">✅ Pago</span></td></tr><tr><td>Fev/26</td><td>10/02</td><td>R$ 850</td><td><span class="status-badge status-pago">✅ Pago</span></td></tr><tr><td>Jan/26</td><td>10/01</td><td>R$ 850</td><td><span class="status-badge status-pago">✅ Pago</span></td></tr></tbody></table></div></div>
+    <div id="section-recibos"     style="display:none"><div class="section-header"><h3>🧾 Recibos</h3></div><div class="table-wrap"><table><thead><tr><th>Ref.</th><th>Mês</th><th>Valor</th><th>Ação</th></tr></thead><tbody><tr><td>REC-0032</td><td>Mar/26</td><td>R$ 850</td><td><button class="btn-download" onclick="alert('Baixando recibo...')">⬇️ Baixar PDF</button></td></tr><tr><td>REC-0019</td><td>Fev/26</td><td>R$ 850</td><td><button class="btn-download" onclick="alert('Baixando recibo...')">⬇️ Baixar PDF</button></td></tr></tbody></table></div></div>
+    <div id="section-importantes" style="display:none"><div class="section-header"><h3>📌 Avisos Importantes</h3></div><div style="display:flex;flex-direction:column;gap:10px"><div class="notif-bar"><span class="notif-icon">📌</span><div class="notif-text"><strong>Regra da Casa:</strong> Silêncio obrigatório após 22h. Respeite os vizinhos.</div></div><div class="notif-bar"><span class="notif-icon">📌</span><div class="notif-text"><strong>Visitas:</strong> Comunicar a administração antes de receber visitas por mais de 3 dias.</div></div><div class="notif-bar"><span class="notif-icon">📌</span><div class="notif-text"><strong>Pets:</strong> Animais de estimação permitidos somente com autorização prévia.</div></div><div class="notif-bar"><span class="notif-icon">📌</span><div class="notif-text"><strong>Incêndio:</strong> Saída de emergência no corredor leste. Nunca bloqueie a saída.</div></div></div></div>
+    <div id="section-correios"    style="display:none"><div class="section-header"><h3>📮 Correios</h3></div><div class="info-card"><h4>📮 Informações de Entrega</h4><div class="info-row"><span class="label">Horário</span><span class="val">Seg–Sex, 08h–18h</span></div><div class="info-row"><span class="label">Local</span><span class="val">Portaria – Caixa A</span></div><div class="info-row"><span class="label">Encomendas</span><span class="val">Retirar em até 5 dias úteis</span></div><div class="info-row"><span class="label">Rastrear</span><span class="val"><a href="https://rastreamento.correios.com.br" target="_blank" style="color:var(--info)">rastreamento.correios.com.br</a></span></div></div></div>
+    <div id="section-lixo"        style="display:none"><div class="section-header"><h3>🗑️ Horário do Lixo</h3></div><div class="info-card"><h4>🗑️ Coleta Semanal</h4><p style="font-size:13px;color:var(--muted);margin-bottom:14px">Coloque os sacos até 30 min antes do horário. Cada tipo de lixo tem seu dia.</p><div class="schedule-grid"><div class="day-chip"><div class="day-icon">🗑️</div><div class="day-name">Seg</div>07h</div><div class="day-chip active"><div class="day-icon">🗑️</div><div class="day-name">Ter</div>07h</div><div class="day-chip"><div class="day-icon">🗑️</div><div class="day-name">Qua</div>07h</div><div class="day-chip active"><div class="day-icon">♻️</div><div class="day-name">Qui</div>07h</div><div class="day-chip"><div class="day-icon">🗑️</div><div class="day-name">Sex</div>07h</div><div class="day-chip active"><div class="day-icon">🗑️</div><div class="day-name">Sáb</div>08h</div><div class="day-chip"><div class="day-icon">—</div><div class="day-name">Dom</div>—</div></div><div class="info-row" style="margin-top:16px"><span class="label">♻️ Quinta</span><span class="val">Reciclável: papel, plástico, vidro, metal</span></div><div class="info-row"><span class="label">🗑️ Demais</span><span class="val">Lixo comum</span></div></div></div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="footer">
+  <div class="footer-col">
+    <h5>📍 Endereço</h5>
+    <p>Rua das Palmeiras, 456</p>
+    <p>Jardim Primavera — São Paulo, SP</p>
+    <p>CEP 01310-100</p>
+  </div>
+  <div class="footer-col">
+    <h5>📞 Contatos</h5>
+    <a href="tel:+551133334444">📞 (11) 3333-4444</a>
+    <a href="https://wa.me/5511999998888">💬 WhatsApp: (11) 99999-8888</a>
+    <a href="mailto:contato@residenciaviva.com.br">✉️ contato@residenciaviva.com.br</a>
+  </div>
+  <div class="footer-col">
+    <h5>🕒 Atendimento</h5>
+    <p>Segunda a Sexta: 08h–18h</p>
+    <p>Sábado: 08h–13h</p>
+    <p>Emergências: 24h via WhatsApp</p>
+  </div>
+</footer>
+<div class="footer-bottom">
+  © 2026 ResidênciaViva — Todos os direitos reservados. Gestão de quartos com tecnologia e cuidado.
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+<div class="modal-overlay" id="agendamentoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📅 Novo Agendamento</h3>
+      <button class="modal-close" onclick="closeModal('agendamentoModal')">✕</button>
+    </div>
+    <div class="form-group"><label>Nome do Interessado</label><input type="text" placeholder="Nome completo"></div>
+    <div class="form-group"><label>Telefone</label><input type="tel" placeholder="(11) 99999-0000"></div>
+    <div class="form-group"><label>Data da Visita</label><input type="date"></div>
+    <div class="form-group"><label>Horário</label><input type="time"></div>
+    <div class="form-group"><label>Quarto de Interesse</label><select><option>— Selecionar —</option><option>101 - Simples</option><option>201 - Duplo</option><option>301 - Suíte</option></select></div>
+    <div class="form-group"><label>Observações</label><textarea placeholder="Informações adicionais..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="alert('Agendamento salvo!');closeModal('agendamentoModal')">✅ Confirmar Agendamento</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="multaModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚠️ Registrar Multa</h3>
+      <button class="modal-close" onclick="closeModal('multaModal')">✕</button>
+    </div>
+    <div class="form-group"><label>Morador</label><input type="text" placeholder="Nome do morador"></div>
+    <div class="form-group"><label>Motivo</label><select><option>Atraso no pagamento</option><option>Dano ao patrimônio</option><option>Infração de regra</option><option>Outro</option></select></div>
+    <div class="form-group"><label>Valor da Multa (R$)</label><input type="number" placeholder="0,00"></div>
+    <div class="form-group"><label>Observação</label><textarea placeholder="Detalhe o motivo..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%;background:var(--danger)" onclick="alert('Multa registrada!');closeModal('multaModal')">⚠️ Aplicar Multa</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="manutencaoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🔧 Abrir Chamado de Manutenção</h3>
+      <button class="modal-close" onclick="closeModal('manutencaoModal')">✕</button>
+    </div>
+    <div class="form-group"><label>Quarto</label><input type="text" placeholder="Número do quarto"></div>
+    <div class="form-group"><label>Problema</label><input type="text" placeholder="Descreva o problema"></div>
+    <div class="form-group"><label>Urgência</label><select><option>Normal</option><option>Alta</option><option>Urgente</option></select></div>
+    <div class="form-group"><label>Detalhes</label><textarea placeholder="Mais informações..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="alert('Chamado aberto!');closeModal('manutencaoModal')">🔧 Abrir Chamado</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reclamacaoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📢 Nova Reclamação</h3>
+      <button class="modal-close" onclick="closeModal('reclamacaoModal')">✕</button>
+    </div>
+    <div class="form-group"><label>Seu Nome</label><input type="text" placeholder="Nome completo"></div>
+    <div class="form-group"><label>Quarto</label><input type="text" placeholder="Seu número de quarto"></div>
+    <div class="form-group"><label>Assunto</label><input type="text" placeholder="Resumo da reclamação"></div>
+    <div class="form-group"><label>Descrição</label><textarea placeholder="Descreva detalhadamente..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="alert('Reclamação enviada!');closeModal('reclamacaoModal')">📢 Enviar Reclamação</button>
+  </div>
+</div>
+
+<script>
+// ── MORADORES ──
+const names = [
+  "Ana Silva","Carlos Mendes","Fernanda Costa","José Oliveira","Mariana Souza",
+  "Ricardo Nunes","Patrícia Lima","Bruno Santos","Luciana Ferreira","Eduardo Alves",
+  "Camila Rocha","Felipe Barbosa","Isabela Martins","Thiago Carvalho","Letícia Gomes",
+  "André Pereira","Juliana Castro","Rodrigo Lima","Priscila Nascimento","Gustavo Araújo",
+  "Vanessa Cardoso","Marcos Dias","Renata Moura","Igor Correia","Daniela Monteiro",
+  "Pablo Ribeiro","Aline Tavares","Vinícius Pinto","Sabrina Freitas","Leonardo Cruz",
+  "Cláudia Azevedo","Fábio Sousa","Natália Cunha","Henrique Borges","Gabriela Lopes",
+  "Otávio Ramos","Laís Fernandes","Diogo Campos","Tânia Melo","Samuel Brito",
+  "Clara Teixeira","Mateus Nogueira","Beatriz Farias","Alessandro Gomes","Elaine Duarte",
+  "Caio Brandão","Mônica Pires","Davi Machado","Simone Leal","Everton Chaves"
+];
+
+function buildMoradores() {
+  const track = document.getElementById('moradoresTrack');
+  const doubled = [...names, ...names];
+  track.innerHTML = doubled.map((n, i) => `
+    <div class="morador-chip">
+      <div class="morador-num">${(i % 50) + 1}</div>
+      <span class="morador-name">${n}</span>
+    </div>
+  `).join('');
+}
+
+buildMoradores();
+
+// ── FLOATING DOTS ──
+function createDots() {
+  const bg = document.getElementById('dotsBg');
+  for (let i = 0; i < 12; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    const size = Math.random() * 30 + 10;
+    d.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*10+8}s;
+      animation-delay:${Math.random()*8}s;
+    `;
+    bg.appendChild(d);
+  }
+}
+createDots();
+
+// ── SECTION SWITCH ──
+function showSection(id) {
+  document.querySelectorAll('[id^="section-"]').forEach(el => el.style.display = 'none');
+  const el = document.getElementById('section-' + id);
+  if (el) el.style.display = 'block';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${id}'`)) {
+      n.classList.add('active');
+    }
+  });
+}
+
+// ── MODALS ──
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// ── FILE UPLOAD ──
+const uploadedFiles = [];
+
+function handleFiles(fileList) {
+  Array.from(fileList).forEach(file => {
+    const isValid = file.name.match(/\.(pdf|docx|doc)$/i);
+    if (!isValid) { alert(`Arquivo "${file.name}" não suportado.`); return; }
+    uploadedFiles.push(file);
+    renderFiles();
+  });
+}
+
+function renderFiles() {
+  ['filesList','filesList2'].forEach(listId => {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = uploadedFiles.map((f, i) => `
+      <div class="file-item">
+        <span class="file-icon">${f.name.endsWith('.pdf') ? '📕' : '📘'}</span>
+        <div class="file-info">
+          <div class="fname">${f.name}</div>
+          <div class="fsize">${(f.size/1024).toFixed(1)} KB</div>
+        </div>
+        <button class="btn-download" onclick="downloadFile(${i})">⬇️ Baixar</button>
+      </div>
+    `).join('');
+  });
+}
+
+function downloadFile(i) {
+  const f = uploadedFiles[i];
+  const url = URL.createObjectURL(f);
+  const a = document.createElement('a');
+  a.href = url; a.download = f.name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Drag & drop
+const dz = document.getElementById('dropZone');
+if (dz) {
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+}
+</script>
+</body>
+</html>
